@@ -1,82 +1,206 @@
-# Walkthrough: Deploying a Hugging Face Model as a Worker Node on the Allora Network
+# Hugging Face Model
+This guide provides a step-by-step process to deploy a Hugging Face model as a Worker Node within the [Allora Network](https://docs.allora.network/). By following these instructions, you will be able to integrate and run models from Hugging Face, contributing to the Allora decentralized machine intelligence ecosystem. In this guide, we'll deploy one worker with 9 topics.
 
-This guide provides a step-by-step process to deploy a Hugging Face model as a Worker Node within the [Allora Network](https://docs.allora.network/). By following these instructions, you will be able to integrate and run models from Hugging Face, contributing to the Allora decentralized machine intelligence ecosystem.
+## Hardware Requirements
+```
+Operating System : Ubuntu 22.04
+CPU: Minimum of 1/2 core.
+Memory: 2 to 4 GB.
+Storage: SSD or NVMe with at least 5GB of space.
+```
+## Install dependencies
+```console
+# Install Packages
+sudo apt update & sudo apt upgrade -y
 
-See [complete walkthrough and instructions here](https://docs.allora.network/devs/workers/walkthroughs/walkthrough-hugging-face-worker).
+sudo apt install ca-certificates zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev curl git wget make jq build-essential pkg-config lsb-release libssl-dev libreadline-dev libffi-dev gcc screen unzip lz4 -y
+```
+```console
+# Install Python3
+sudo apt install python3
+python3 --version
 
+sudo apt install python3-pip
+pip3 --version
+```
+```console
+# Install Docker
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+sudo apt-get update
+sudo apt-get install docker-ce docker-ce-cli containerd.io
+docker version
+
+# Install Docker-Compose
+VER=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep tag_name | cut -d '"' -f 4)
+
+curl -L "https://github.com/docker/compose/releases/download/"$VER"/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+
+chmod +x /usr/local/bin/docker-compose
+docker-compose --version
+
+# Docker Permission to user
+sudo groupadd docker
+sudo usermod -aG docker $USER
+```
+```console
+# Install Go
+sudo rm -rf /usr/local/go
+curl -L https://go.dev/dl/go1.22.4.linux-amd64.tar.gz | sudo tar -xzf - -C /usr/local
+echo 'export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin' >> $HOME/.bash_profile
+echo 'export PATH=$PATH:$(go env GOPATH)/bin' >> $HOME/.bash_profile
+source .bash_profile
+go version
+```
+## Install and run
+```console
+# if you have basic-prediction-node previously installed
+cd $HOME && cd basic-coin-prediction-node
+docker compose down -v
+docker container prune
+
+cd $HOME && rm -rf basic-coin-prediction-node
+```
+```console
+git clone https://github.com/allora-network/allora-huggingface-walkthrough
+cd allora-huggingface-walkthrough
+```
+```console
+mkdir -p worker-data
+chmod -R 777 worker-data
+```
+```console
+rm config.example.json && nano config.json
+```
+Paste this in and edit the "seed phrase" into yours and change the `nodeRpc` into `https://allora-rpc.testnet-1.testnet.allora.network/`
+```console
+{
+    "wallet": {
+        "addressKeyName": "test",
+        "addressRestoreMnemonic": "seed phrase",
+        "alloraHomeDir": "/root/.allorad",
+        "gas": "1000000",
+        "gasAdjustment": 1.0,
+        "nodeRpc": "https://sentries-rpc.testnet-1.testnet.allora.network/",
+        "maxRetries": 1,
+        "delay": 1,
+        "submitTx": false
+    },
+    "worker": [
+        {
+            "topicId": 1,
+            "inferenceEntrypointName": "api-worker-reputer",
+            "loopSeconds": 1,
+            "parameters": {
+                "InferenceEndpoint": "http://inference:8000/inference/{Token}",
+                "Token": "ETH"
+            }
+        },
+        {
+            "topicId": 2,
+            "inferenceEntrypointName": "api-worker-reputer",
+            "loopSeconds": 3,
+            "parameters": {
+                "InferenceEndpoint": "http://inference:8000/inference/{Token}",
+                "Token": "ETH"
+            }
+        },
+        {
+            "topicId": 3,
+            "inferenceEntrypointName": "api-worker-reputer",
+            "loopSeconds": 5,
+            "parameters": {
+                "InferenceEndpoint": "http://inference:8000/inference/{Token}",
+                "Token": "BTC"
+            }
+        },
+        {
+            "topicId": 4,
+            "inferenceEntrypointName": "api-worker-reputer",
+            "loopSeconds": 2,
+            "parameters": {
+                "InferenceEndpoint": "http://inference:8000/inference/{Token}",
+                "Token": "BTC"
+            }
+        },
+        {
+            "topicId": 5,
+            "inferenceEntrypointName": "api-worker-reputer",
+            "loopSeconds": 4,
+            "parameters": {
+                "InferenceEndpoint": "http://inference:8000/inference/{Token}",
+                "Token": "SOL"
+            }
+        },
+        {
+            "topicId": 6,
+            "inferenceEntrypointName": "api-worker-reputer",
+            "loopSeconds": 5,
+            "parameters": {
+                "InferenceEndpoint": "http://inference:8000/inference/{Token}",
+                "Token": "SOL"
+            }
+        },
+        {
+            "topicId": 7,
+            "inferenceEntrypointName": "api-worker-reputer",
+            "loopSeconds": 2,
+            "parameters": {
+                "InferenceEndpoint": "http://inference:8000/inference/{Token}",
+                "Token": "ETH"
+            }
+        },
+        {
+            "topicId": 8,
+            "inferenceEntrypointName": "api-worker-reputer",
+            "loopSeconds": 3,
+            "parameters": {
+                "InferenceEndpoint": "http://inference:8000/inference/{Token}",
+                "Token": "BNB"
+            }
+        },
+        {
+            "topicId": 9,
+            "inferenceEntrypointName": "api-worker-reputer",
+            "loopSeconds": 5,
+            "parameters": {
+                "InferenceEndpoint": "http://inference:8000/inference/{Token}",
+                "Token": "ARB"
+            }
+        }
+        
+    ]
+}
+```
+## Export and give permission
+```console
+chmod +x init.config
+./init.config
+```
+## Edit app.py
+* Register on [Coingecko](https://www.coingecko.com/en/developers/dashboard) and create demo API key
+* Replace API "CG-xxxxxxxxxxxx" with your API key
+```console
+nano app.py
+```
+## Build
+```console
+docker compose up -d --build
+```
+## Check logs
+```console
+docker logs -f worker
+```
+```console
+docker logs -f inference-hf
+```
+To confirm that the worker successfully sends the inferences to the chain, look for the following in your worker logs:
+```
+{"level":"debug","msg":"Send Worker Data to chain","txHash":<tx-hash>,"time":<timestamp>,"message":"Success"}
+```
+You can also check your wallet here http://worker-tx.nodium.xyz/
+
+Check your points here [Allora](https://app.allora.network?ref=eyJyZWZlcnJlcl9pZCI6ImYxMTBlNmRjLTViNGEtNGEyNS05OTRhLWQzOGM1NWNlYjVmYiJ9).
 ---
-## Components
-
-- **Worker**: The node that publishes inferences to the Allora chain.
-- **Inference**: A container that conducts inferences, maintains the model state, and responds to internal inference requests via a Flask application. This node operates with a basic linear regression model for price predictions.
-
-Check the `docker-compose.yml` file for the detailed setup of each component.
-
-## Docker-Compose Setup
-
-A complete working example is provided in the `docker-compose.yml` file.
-
-### Steps to Setup
-
-1. **Clone the Repository**
-2. **Copy and Populate Configuration**
-    
-    Copy the example configuration file and populate it with your variables:
-    ```sh
-    cp config.example.json config.json
-    ```
-
-3. **Initialize Worker**
-    
-    Run the following commands from the project's root directory to initialize the worker:
-    ```sh
-    chmod +x init.config
-    ./init.config
-    ```
-    These commands will:
-    - Automatically create Allora keys for your worker.
-    - Export the needed variables from the created account to be used by the worker node, bundle them with your provided `config.json`, and pass them to the node as environment variables.
-
-4. **Faucet Your Worker Node**
-    
-    You can find the offchain worker node's address in `./worker-data/env_file` under `ALLORA_OFFCHAIN_ACCOUNT_ADDRESS`. [Add faucet funds](https://docs.allora.network/devs/get-started/setup-wallet#add-faucet-funds) to your worker's wallet before starting it.
-
-5. **Start the Services**
-    
-    Run the following command to start the worker node, inference, and updater nodes:
-    ```sh
-    docker compose up --build
-    ```
-    To confirm that the worker successfully sends the inferences to the chain, look for the following log:
-    ```
-    {"level":"debug","msg":"Send Worker Data to chain","txHash":<tx-hash>,"time":<timestamp>,"message":"Success"}
-    ```
-
-## Testing Inference Only
-
-This setup allows you to develop your model without the need to bring up the offchain worker. To test the inference model only:
-
-1. Run the following command to start the inference node:
-    ```sh
-    docker compose up --build inference
-    ```
-
-2. Send requests to the inference model. For example, request ETH price inferences:
-    
-    ```sh
-    curl http://127.0.0.1:8000/inference/ETH
-    ```
-    Expected response:
-    ```json
-    {"value":"2564.021586281073"}
-    ```
-
-3. Update the node's internal state (download pricing data, train, and update the model):
-    
-    ```sh
-    curl http://127.0.0.1:8000/update
-    ```
-    Expected response:
-    ```sh
-    0
-    ```
